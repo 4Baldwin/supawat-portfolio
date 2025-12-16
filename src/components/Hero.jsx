@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Terminal, Download, Github, Code2, Monitor, Layers, Cpu } from 'lucide-react';
+import { Terminal, Github, Code2, Monitor, Layers, Cpu } from 'lucide-react';
 import { Badge } from './ui/Badge';
 
 export default function Hero() {
@@ -30,15 +30,7 @@ export default function Hero() {
 
                 {/* Buttons */}
                 <div className="mt-8 flex flex-wrap gap-3">
-                    <a
-                        href="/Resume_Supawat.pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full bg-cyan-400 px-6 py-2.5 text-xs font-bold text-black shadow-[0_0_20px_rgba(34,211,238,0.4)] transition hover:-translate-y-0.5 hover:bg-cyan-300 hover:shadow-[0_0_30px_rgba(34,211,238,0.6)]"
-                    >
-                        <Download size={16} />
-                        Download Resume
-                    </a>
+
 
                     <a
                         href="https://github.com/4Baldwin"

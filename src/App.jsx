@@ -51,30 +51,12 @@ function App() {
       {/* Animated Background Shapes */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <motion.div
-          animate={{
-            x: [0, 100, 0],
-            y: [0, -50, 0],
-            scale: [1, 1.2, 1]
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
           className="absolute -left-[10%] -top-[10%] h-[500px] w-[500px] rounded-full bg-cyan-500/20 blur-[80px]"
         />
         <motion.div
-          animate={{
-            x: [0, -100, 0],
-            y: [0, 100, 0],
-            scale: [1, 1.5, 1]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
           className="absolute -right-[10%] top-[20%] h-[400px] w-[400px] rounded-full bg-fuchsia-500/20 blur-[80px]"
         />
         <motion.div
-          animate={{
-            x: [0, 50, 0],
-            y: [0, 50, 0],
-            scale: [1, 1.3, 1]
-          }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
           className="absolute bottom-[10%] left-[20%] h-[600px] w-[600px] rounded-full bg-blue-600/20 blur-[80px]"
         />
       </div>

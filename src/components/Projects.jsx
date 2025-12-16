@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Section } from './ui/Section';
-import { GlassCard } from './ui/GlassCard';
-import { TitleSmall } from './ui/TitleSmall';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import { Section } from "./ui/Section";
+import { TitleSmall } from "./ui/TitleSmall";
+import { GlassCard } from "./ui/GlassCard";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Projects() {
     // ================== WEB DEV IMAGES ==================
@@ -69,36 +69,61 @@ export default function Projects() {
         alt: `GPU Maintenance Step ${i + 1}`
     }));
 
-    // Combine all images
-    const allImages = [
-        ...blockchainImages, ...storefrontImages, ...connectParkImages, ...speechImages,
-        ...windowsImages, ...biosImages, ...adLabImages, ...cpuImages, ...gpuImages
-    ];
+    const [lightbox, setLightbox] = useState({
+        isOpen: false,
+        images: [],
+        index: 0
+    });
 
-    // Calculate offsets
-    const blockchainOffset = 0;
-    const storefrontOffset = blockchainImages.length;
-    const connectParkOffset = storefrontOffset + storefrontImages.length;
-    const speechOffset = connectParkOffset + connectParkImages.length;
-    const windowsOffset = speechOffset + speechImages.length;
-    const biosOffset = windowsOffset + windowsImages.length;
-    const adLabOffset = biosOffset + biosImages.length;
-    const cpuOffset = adLabOffset + adLabImages.length;
-    const gpuOffset = cpuOffset + cpuImages.length;
+    const thumbnailRef = useRef(null);
 
-    const [lightboxIndex, setLightboxIndex] = useState(null);
+    const openLightbox = (images, index) => {
+        setLightbox({
+            isOpen: true,
+            images,
+            index
+        });
+    };
 
-    // Lock body scroll when lightbox is open
+    const closeLightbox = () => {
+        setLightbox((prev) => ({ ...prev, isOpen: false }));
+    };
+
     useEffect(() => {
-        if (lightboxIndex !== null) {
+        if (lightbox.isOpen) {
             document.body.style.overflow = "hidden";
         } else {
             document.body.style.overflow = "auto";
         }
-        return () => {
-            document.body.style.overflow = "auto";
-        };
-    }, [lightboxIndex]);
+
+        // Mouse wheel horizontal scroll logic
+        const element = thumbnailRef.current;
+        if (lightbox.isOpen && element) {
+            const handleWheel = (e) => {
+                if (e.deltaY === 0) return;
+                e.preventDefault();
+                element.scrollLeft += e.deltaY * 2; // Increased scroll speed
+            };
+
+            element.addEventListener("wheel", handleWheel, { passive: false });
+
+            // Auto-scroll to active thumbnail
+            const thumbnailContainer = element.firstElementChild;
+            const activeThumbnail = thumbnailContainer?.children[lightbox.index];
+
+            if (activeThumbnail) {
+                activeThumbnail.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
+            }
+
+            return () => {
+                element.removeEventListener("wheel", handleWheel);
+            };
+        }
+    }, [lightbox.isOpen, lightbox.index]);
 
     return (
         <Section id="projects" title="PROJECTS" className="space-y-6">
@@ -115,21 +140,21 @@ export default function Projects() {
                         </p>
                     </div>
                     <p className="mt-4 text-sm leading-relaxed text-slate-200">
-                        Developed a decentralized crowdfunding platform on <strong>Sepolia Testnet</strong>.
-                        Built with <strong>Solidity</strong> Smart Contracts and a responsive <strong>React</strong> frontend.
-                        Ensures transparency and security for all donations via blockchain technology.
+                        พัฒนาแพลตฟอร์มระดมทุนแบบกระจายศูนย์ (Decentralized) บนเครือข่าย <strong>Sepolia Testnet</strong>
+                        สร้างด้วย <strong>Solidity</strong> Smart Contracts และหน้าเว็บที่รองรับทุกอุปกรณ์ด้วย <strong>React</strong>
+                        รับประกันความโปร่งใสและความปลอดภัยสำหรับการบริจาคทั้งหมดผ่านเทคโนโลยี Blockchain
                     </p>
                     <div className="mt-6">
                         <div className="flex items-center justify-between">
                             <TitleSmall>PREVIEW</TitleSmall>
-                            <button onClick={() => setLightboxIndex(blockchainOffset)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
+                            <button onClick={() => openLightbox(blockchainImages, 0)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
                                 View All 4 Images
                             </button>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {blockchainImages.map((img, index) => (
-                                <button key={index} onClick={() => setLightboxIndex(blockchainOffset + index)} className="group block overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
-                                    <img src={img.src} alt={img.alt} className="w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
+                                <button key={index} onClick={() => openLightbox(blockchainImages, index)} className="group block aspect-video overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
+                                    <img src={img.src} alt={img.alt} className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
                                 </button>
                             ))}
                         </div>
@@ -145,20 +170,20 @@ export default function Projects() {
                         </p>
                     </div>
                     <p className="mt-4 text-sm leading-relaxed text-slate-200">
-                        Customized WooCommerce Storefront theme to a <strong>Dark Neon Glass UI</strong>.
-                        Modified Header, Product Cards, and Cart pages using Custom CSS and PHP hooks without altering the core theme.
+                        ปรับแต่งธีม WooCommerce Storefront ให้เป็นดีไซน์ <strong>Dark Neon Glass UI</strong>
+                        แก้ไขส่วน Header, การ์ดสินค้า และหน้าตะกร้าสินค้า โดยใช้ Custom CSS และ PHP Hooks โดยไม่กระทบกับธีมหลัก
                     </p>
                     <div className="mt-6">
                         <div className="flex items-center justify-between">
                             <TitleSmall>PREVIEW</TitleSmall>
-                            <button onClick={() => setLightboxIndex(storefrontOffset)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
+                            <button onClick={() => openLightbox(storefrontImages, 0)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
                                 View All 6 Images
                             </button>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {storefrontImages.slice(0, 4).map((img, index) => (
-                                <button key={index} onClick={() => setLightboxIndex(storefrontOffset + index)} className="group block overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
-                                    <img src={img.src} alt={img.alt} className="w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
+                                <button key={index} onClick={() => openLightbox(storefrontImages, index)} className="group block aspect-video overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
+                                    <img src={img.src} alt={img.alt} className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
                                 </button>
                             ))}
                         </div>
@@ -174,21 +199,21 @@ export default function Projects() {
                         </p>
                     </div>
                     <p className="mt-4 text-sm leading-relaxed text-slate-200">
-                        Production-ready RESTful API for a smart parking system.
-                        Built with <strong>NestJS</strong>, <strong>Prisma</strong>, and <strong>PostgreSQL</strong>.
-                        Features JWT Authentication, Ticket Management, and Docker containerization.
+                        RESTful API ระดับ Production สำหรับระบบจอดรถอัจฉริยะ
+                        พัฒนาด้วย <strong>NestJS</strong>, <strong>Prisma</strong> และ <strong>PostgreSQL</strong>
+                        มีระบบยืนยันตัวตนด้วย JWT, การจัดการตั๋ว และการทำ Containerization ด้วย Docker
                     </p>
                     <div className="mt-6">
                         <div className="flex items-center justify-between">
                             <TitleSmall>PREVIEW</TitleSmall>
-                            <button onClick={() => setLightboxIndex(connectParkOffset)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
+                            <button onClick={() => openLightbox(connectParkImages, 0)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
                                 View All 5 Images
                             </button>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {connectParkImages.slice(0, 4).map((img, index) => (
-                                <button key={index} onClick={() => setLightboxIndex(connectParkOffset + index)} className="group block overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
-                                    <img src={img.src} alt={img.alt} className="w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
+                                <button key={index} onClick={() => openLightbox(connectParkImages, index)} className="group block aspect-video overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
+                                    <img src={img.src} alt={img.alt} className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
                                 </button>
                             ))}
                         </div>
@@ -204,21 +229,21 @@ export default function Projects() {
                         </p>
                     </div>
                     <p className="mt-4 text-sm leading-relaxed text-slate-200">
-                        Desktop application for converting Thai speech to text.
-                        Supports real-time microphone input and file processing (.mp3, .wav).
-                        Built with <strong>Python</strong> and <strong>Flet</strong> framework.
+                        โปรแกรม Desktop สำหรับแปลงเสียงพูดภาษาไทยเป็นข้อความ
+                        รองรับการรับเสียงผ่านไมโครโฟนแบบ Real-time และการประมวลผลไฟล์เสียง (.mp3, .wav)
+                        พัฒนาด้วยภาษา <strong>Python</strong> และเฟรมเวิร์ก <strong>Flet</strong>
                     </p>
                     <div className="mt-6">
                         <div className="flex items-center justify-between">
                             <TitleSmall>PREVIEW</TitleSmall>
-                            <button onClick={() => setLightboxIndex(speechOffset)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
+                            <button onClick={() => openLightbox(speechImages, 0)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
                                 View All 3 Images
                             </button>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {speechImages.map((img, index) => (
-                                <button key={index} onClick={() => setLightboxIndex(speechOffset + index)} className="group block overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
-                                    <img src={img.src} alt={img.alt} className="w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
+                                <button key={index} onClick={() => openLightbox(speechImages, index)} className="group block aspect-video overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
+                                    <img src={img.src} alt={img.alt} className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
                                 </button>
                             ))}
                         </div>
@@ -242,14 +267,14 @@ export default function Projects() {
                     <div className="mt-6">
                         <div className="flex items-center justify-between">
                             <TitleSmall>PREVIEW</TitleSmall>
-                            <button onClick={() => setLightboxIndex(windowsOffset)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
+                            <button onClick={() => openLightbox(windowsImages, 0)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
                                 View All 41 Images
                             </button>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {windowsImages.slice(0, 4).map((img, index) => (
-                                <button key={index} onClick={() => setLightboxIndex(windowsOffset + index)} className="group block overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
-                                    <img src={img.src} alt={img.alt} className="w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
+                                <button key={index} onClick={() => openLightbox(windowsImages, index)} className="group block aspect-video overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
+                                    <img src={img.src} alt={img.alt} className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
                                 </button>
                             ))}
                         </div>
@@ -270,14 +295,14 @@ export default function Projects() {
                     <div className="mt-6">
                         <div className="flex items-center justify-between">
                             <TitleSmall>PREVIEW</TitleSmall>
-                            <button onClick={() => setLightboxIndex(biosOffset)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
+                            <button onClick={() => openLightbox(biosImages, 0)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
                                 View All 8 Images
                             </button>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {biosImages.slice(0, 4).map((img, index) => (
-                                <button key={index} onClick={() => setLightboxIndex(biosOffset + index)} className="group block overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
-                                    <img src={img.src} alt={img.alt} className="w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
+                                <button key={index} onClick={() => openLightbox(biosImages, index)} className="group block aspect-video overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
+                                    <img src={img.src} alt={img.alt} className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
                                 </button>
                             ))}
                         </div>
@@ -300,14 +325,14 @@ export default function Projects() {
                     <div className="mt-6">
                         <div className="flex items-center justify-between">
                             <TitleSmall>PREVIEW</TitleSmall>
-                            <button onClick={() => setLightboxIndex(adLabOffset)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
+                            <button onClick={() => openLightbox(adLabImages, 0)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
                                 View All 9 Images
                             </button>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {adLabImages.slice(0, 4).map((img, index) => (
-                                <button key={index} onClick={() => setLightboxIndex(adLabOffset + index)} className="group block overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
-                                    <img src={img.src} alt={img.alt} className="w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
+                                <button key={index} onClick={() => openLightbox(adLabImages, index)} className="group block aspect-video overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
+                                    <img src={img.src} alt={img.alt} className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
                                 </button>
                             ))}
                         </div>
@@ -329,14 +354,14 @@ export default function Projects() {
                     <div className="mt-6">
                         <div className="flex items-center justify-between">
                             <TitleSmall>PREVIEW</TitleSmall>
-                            <button onClick={() => setLightboxIndex(cpuOffset)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
+                            <button onClick={() => openLightbox(cpuImages, 0)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
                                 View All 8 Images
                             </button>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {cpuImages.slice(0, 4).map((img, index) => (
-                                <button key={index} onClick={() => setLightboxIndex(cpuOffset + index)} className="group block overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
-                                    <img src={img.src} alt={img.alt} className="w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
+                                <button key={index} onClick={() => openLightbox(cpuImages, index)} className="group block aspect-video overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
+                                    <img src={img.src} alt={img.alt} className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
                                 </button>
                             ))}
                         </div>
@@ -358,14 +383,14 @@ export default function Projects() {
                     <div className="mt-6">
                         <div className="flex items-center justify-between">
                             <TitleSmall>PREVIEW</TitleSmall>
-                            <button onClick={() => setLightboxIndex(gpuOffset)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
+                            <button onClick={() => openLightbox(gpuImages, 0)} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300 hover:underline">
                                 View All 6 Images
                             </button>
                         </div>
                         <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                             {gpuImages.slice(0, 4).map((img, index) => (
-                                <button key={index} onClick={() => setLightboxIndex(gpuOffset + index)} className="group block overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
-                                    <img src={img.src} alt={img.alt} className="w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
+                                <button key={index} onClick={() => openLightbox(gpuImages, index)} className="group block aspect-video overflow-hidden rounded-xl border border-cyan-400/20 shadow-lg transition hover:border-cyan-300/60">
+                                    <img src={img.src} alt={img.alt} className="h-full w-full object-cover opacity-90 transition group-hover:opacity-100 group-hover:scale-[1.03]" />
                                 </button>
                             ))}
                         </div>
@@ -375,37 +400,81 @@ export default function Projects() {
             </div>
 
             {/* Lightbox Overlay */}
-            {lightboxIndex !== null && (
+            {lightbox.isOpen && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur"
-                    onClick={() => setLightboxIndex(null)}
+                    className="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur-md"
+                    onClick={closeLightbox}
                 >
-                    <div className="relative w-full max-w-[95vw] px-4" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-center overflow-hidden">
+                    {/* Main Image Area */}
+                    <div className="relative flex-1 flex items-center justify-center overflow-hidden p-4">
+                        <div className="relative h-full w-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                             <img
-                                src={allImages[lightboxIndex].src}
-                                alt={allImages[lightboxIndex].alt}
-                                className="max-h-[90vh] max-w-full rounded-2xl border border-cyan-400/40 bg-black object-contain shadow-[0_0_20px_rgba(34,211,238,0.5)]"
+                                src={lightbox.images[lightbox.index].src}
+                                alt={lightbox.images[lightbox.index].alt}
+                                className="max-h-full max-w-full rounded-lg object-contain shadow-[0_0_30px_rgba(34,211,238,0.3)]"
                             />
                         </div>
+
+                        {/* Navigation Buttons */}
                         <button
-                            onClick={() => setLightboxIndex(null)}
-                            className="fixed right-6 top-6 z-[60] flex h-12 w-12 items-center justify-center rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md text-slate-100 transition hover:bg-cyan-500 hover:text-black hover:scale-110"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                closeLightbox();
+                            }}
+                            className="absolute right-4 top-4 z-[60] flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-slate-100 backdrop-blur-md transition hover:bg-cyan-500 hover:text-black"
                         >
-                            <X size={24} />
+                            <X size={20} />
                         </button>
                         <button
-                            onClick={() => setLightboxIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1))}
-                            className="fixed left-6 top-1/2 z-[60] -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md text-slate-100 transition hover:bg-cyan-500 hover:text-black hover:scale-110"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setLightbox((prev) => ({
+                                    ...prev,
+                                    index: prev.index === 0 ? prev.images.length - 1 : prev.index - 1
+                                }));
+                            }}
+                            className="absolute left-4 top-1/2 z-[60] -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-slate-100 backdrop-blur-md transition hover:bg-cyan-500 hover:text-black"
                         >
-                            <ChevronLeft size={32} />
+                            <ChevronLeft size={28} />
                         </button>
                         <button
-                            onClick={() => setLightboxIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1))}
-                            className="fixed right-6 top-1/2 z-[60] -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md text-slate-100 transition hover:bg-cyan-500 hover:text-black hover:scale-110"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setLightbox((prev) => ({
+                                    ...prev,
+                                    index: prev.index === prev.images.length - 1 ? 0 : prev.index + 1
+                                }));
+                            }}
+                            className="absolute right-4 top-1/2 z-[60] -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-slate-100 backdrop-blur-md transition hover:bg-cyan-500 hover:text-black"
                         >
-                            <ChevronRight size={32} />
+                            <ChevronRight size={28} />
                         </button>
+                    </div>
+
+                    {/* Thumbnail Strip */}
+                    <div
+                        ref={thumbnailRef}
+                        className="h-24 w-full border-t border-white/10 bg-black/80 backdrop-blur-xl overflow-x-auto scrollbar-hide flex"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex h-full items-center gap-3 px-4 py-3 m-auto">
+                            {lightbox.images.map((img, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setLightbox((prev) => ({ ...prev, index }))}
+                                    className={`relative aspect-video h-full flex-shrink-0 overflow-hidden rounded-md border-2 transition-all ${index === lightbox.index
+                                        ? "border-cyan-400 opacity-100 shadow-[0_0_10px_rgba(34,211,238,0.5)] scale-105"
+                                        : "border-transparent opacity-40 hover:opacity-80 hover:scale-105"
+                                        }`}
+                                >
+                                    <img
+                                        src={img.src}
+                                        alt={img.alt}
+                                        className="h-full w-full object-cover"
+                                    />
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
